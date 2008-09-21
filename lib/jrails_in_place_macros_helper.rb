@@ -32,7 +32,12 @@ module InPlaceMacrosHelper
   # <tt>original_html</tt>::    name of parameter holding original_html; default: original_html
   # <tt>save_button</tt>::      image button tag to use as "Save" button""
   # <tt>cancel_button</tt>::    image button tag to use as "Cancel" button""
+  # <tt>show_buttons</tt>::     will show the buttons: cancel or save; will automatically cancel out the onBlur functionality
   # <tt>callback</tt>::         call function instead of submitting to url
+  # <tt>error</tt>::            this function gets called if server responds with an error
+  # <tt>edit_after_error</tt>:: if set to true, editing will not end when an error occurs; default: false
+  # <tt>cancel<tt>::            this function gets called when editing is cancelled
+  # <tt>on_blur</tt>::          what to do on blur: "save", "cancel" or null; default: "save"
   def in_place_editor(field_id, options = {})
     function = "$('##{field_id}').editInPlace("
 
@@ -50,12 +55,17 @@ module InPlaceMacrosHelper
     js_options['bg_out'] = "'" + options[:bg_out] + "'" if options[:bg_out]
     js_options['saving_text'] = "'" + options[:saving_text] + "'" if options[:saving_text] 
     js_options['saving_image'] = "'" + options[:saving_image] + "'" if options[:saving_image]
-    js_options['value_required'] = !!options[:value_required] if options[:value_required]
+    js_options['value_required'] = !!options[:value_required] if options.include?(:value_required)
     js_options['update_value'] = "'value'"
     js_options['save_button'] = options[:save_button] if options[:save_button]
+    js_options['show_buttons'] = !!options[:show_buttons] if options.include?(:show_buttons)
     js_options['cancel_button'] = options[:cancel_button] if options[:cancel_button]
-    js_options['callback'] = %{function() {#{options[:callback]}}} if options[:callback]
+    js_options['callback'] = %{function(id, new_html, original_html, params) {#{options[:callback]}}} if options[:callback]
+    js_options['success'] = %{function(new_html, original_html) {#{options[:error]}}} if options[:error]
     js_options['error'] = %{function(request) {#{options[:error]}}} if options[:error]
+    js_options['edit_after_error'] = !!options[:edit_after_error] if options.include?(:edit_after_error)
+    js_options['cancel'] = %{function(id) {#{options[:cancel]}}} if options[:cancel]
+    js_options['on_blur'] = options[:on_blur] if options.include?(:on_blur)
 
     function << options_for_javascript(js_options)
     function << ')'
